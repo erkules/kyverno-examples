@@ -1,0 +1,29 @@
+apiVersion: kyverno.io/v1
+
+kind: ClusterPolicy
+metadata:
+  name: hostport-verify
+  annotations:
+    policies.kyverno.io/subject:  Service
+    policies.kyverno.io/description: >-
+      The usage of hostPort is forbidden
+spec:
+  background:              true
+  validationFailureAction: audit
+  failurePolicy:           Fail
+  rules: 
+  - name: hostport-verify
+    match:
+      resources:
+        kinds: 
+        - Service
+    exclude:
+      resources:
+        namespaces:
+        - kube-system
+    validate:
+      message: "The usage of hostPort is forbidden"
+      pattern:
+      - spec:
+        type: "!NodePort"
+            

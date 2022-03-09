@@ -1,0 +1,45 @@
+apiVersion: kyverno.io/v1
+
+kind: ClusterPolicy
+metadata:
+  name: run-nonroot
+  annotations:
+    policies.kyverno.io/subject:  Pods
+    policies.kyverno.io/description: >-
+      Application must run an nonRoot.
+      Please set spec.securityContext.runAsNonRoot
+spec:
+  background:              true
+  validationFailureAction: audit
+  failurePolicy:           Fail
+  rules: 
+  - name: run-nonroot
+    match:
+      resources:
+        kinds: 
+        - Pod
+    exclude:
+      resources:
+        namespaces:
+        - kube-system
+    validate:
+      message: "Application must run an nonRoot"
+      anyPattern:
+      - spec:
+          securityContext:
+            runAsNonRoot: true
+          containers:
+          - =(securityContext):
+              =(runAsNonRoot): true
+          # Darueber kann mensch streiten, ob die Regel auch für initContainers gelten sollte
+          =(initContainers):
+          - =(securityContext):
+              =(runAsNonRoot): true
+      - spec:
+          containers:
+          - securityContext:
+              runAsNonRoot: true
+          # Darueber kann mensch streiten, ob die Regel auch für initContainers gelten sollte
+          =(initContainers):
+          - securityContext:
+              runAsNonRoot: true

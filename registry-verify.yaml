@@ -1,0 +1,32 @@
+apiVersion: kyverno.io/v1
+
+kind: ClusterPolicy
+metadata:
+  name: registry-verify
+  annotations:
+    policies.kyverno.io/subject:  Pods
+    policies.kyverno.io/description: >-
+      Only spefic registries are allowed
+spec:
+  background:              true
+  validationFailureAction: audit
+  failurePolicy:           Fail
+  rules: 
+  - name: registry-verify
+    match:
+      resources:
+        kinds: 
+        - Pod
+    exclude:
+      resources:
+        namespaces:
+        - kube-system
+    validate:
+      message: "An image is pulled from a non allowed registry"
+      pattern:
+      - spec:
+          containers:
+            - image: "my.registry.de/*"
+          # Darueber kann mensch streiten, ob die Regel auch für initContainers gelten sollte
+          =(initContainers):
+            - image: "my.registry.de/*"

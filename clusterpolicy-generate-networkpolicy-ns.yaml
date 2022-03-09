@@ -1,0 +1,32 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: clusterpolicy-generate-networkpolicy-ns
+  annotations:
+    policies.kyverno.io/subject:  Namespace
+    policies.kyverno.io/description: >-
+      Generate a DenyNetworkPolicy
+      To enforce NetworkPolicys for the Pods
+spec:
+  rules:
+  - name: clusterpolicy-generate-networkpolicy-ns
+    match:
+      resources:
+        kinds:
+        - Namespace
+        namespaces:
+        - "project*"
+    generate:
+      synchronize: true
+      kind: NetworkPolicy
+      name: allow-own-name-space
+      namespace:  "{{request.object.metadata.name}}"
+      data:
+        spec:
+          podSelector: {}
+          policyTypes:
+          - Ingress
+          ingress:
+          - from:
+            - podSelector: {}
+        

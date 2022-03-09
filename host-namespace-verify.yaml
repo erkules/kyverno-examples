@@ -1,0 +1,31 @@
+apiVersion: kyverno.io/v1
+
+kind: ClusterPolicy
+metadata:
+  name: host-namespace-verify
+  annotations:
+    policies.kyverno.io/subject:  Pods
+    policies.kyverno.io/description: >-
+      It is not allowed to share Host,IPC,Net-Namespace with the host
+spec:
+  background:              true
+  validationFailureAction: audit
+  failurePolicy:           Fail
+  rules: 
+  - name: host-namespace-verify
+    match:
+      resources:
+        kinds: 
+        - Pod
+    exclude:
+      resources:
+        namespaces:
+        - kube-system
+    validate:
+      message: "hostPID, hostNetwork and hostIPC are prohibited"
+      anyPattern:
+      - spec:
+          =(hostNetwork): false
+          =(hostPID):     false
+          =(hostIPC):     false
+            

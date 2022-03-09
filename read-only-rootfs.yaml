@@ -1,0 +1,44 @@
+apiVersion: kyverno.io/v1
+
+kind: ClusterPolicy
+metadata:
+  name: read-only-rootfs 
+  annotations:
+    policies.kyverno.io/subject:  Pods
+    policies.kyverno.io/description: >-
+      This policy checks if the rootfs is read-only
+spec:
+  background:              true
+  validationFailureAction: audit
+  failurePolicy:           Fail
+  rules: 
+  - name: read-only-rootfs
+    match:
+      resources:
+        kinds: 
+        - Pod
+    exclude:
+      resources:
+        namespaces:
+        - kube-system
+    validate:
+      message: "Root filesystem must be read-only"
+      anyPattern:
+      - spec:
+          securityContext:
+            readOnlyRootFilesystem: true
+          containers:
+          - =(securityContext):
+              =(readOnlyRootFilesystem): true
+          # Darueber kann mensch streiten, ob die Regel auch für initContainers gelten sollte
+          =(initContainers):
+          - =(securityContext):
+              =(readOnlyRootFilesystem): true
+      - spec:
+          containers:
+          - securityContext:
+              readOnlyRootFilesystem: true
+          # Darueber kann mensch streiten, ob die Regel auch für initContainers gelten sollte
+          =(initContainers):
+          - securityContext:
+              readOnlyRootFilesystem: true

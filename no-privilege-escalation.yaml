@@ -1,0 +1,44 @@
+apiVersion: kyverno.io/v1
+
+kind: ClusterPolicy
+metadata:
+  name: no-privilege-escallation
+  annotations:
+    policies.kyverno.io/subject:  Pods
+    policies.kyverno.io/description: >-
+      This policy checks if "securityContext.allowPrivilegeEscalation: false"
+spec:
+  background:              true
+  validationFailureAction: audit
+  failurePolicy:           Fail
+  rules: 
+  - name: no-privilege-escallation
+    match:
+      resources:
+        kinds: 
+        - Pod
+    exclude:
+      resources:
+        namespaces:
+        - kube-system
+    validate:
+      message: "The Pod should set allowPrivilegeEscalation: false"
+      anyPattern:
+      - spec:
+          securityContext:
+            allowPrivilegeEscalation: false
+          containers:
+          - =(securityContext):
+              =(readOnlyRootFilesystem): true
+          # Darueber kann mensch streiten, ob die Regel auch für initContainers gelten sollte
+          =(initContainers):
+          - =(securityContext):
+              =(allowPrivilegeEscalation): false
+      - spec:
+          containers:
+          - securityContext:
+              allowPrivilegeEscalation: false
+          # Darueber kann mensch streiten, ob die Regel auch für initContainers gelten sollte
+          =(initContainers):
+          - securityContext:
+              allowPrivilegeEscalation: false

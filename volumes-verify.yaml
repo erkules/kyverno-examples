@@ -1,0 +1,39 @@
+# https://kyverno.io/policies/pod-security/restricted/restrict-volume-types/restrict-volume-types/
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: volumes-verify
+  annotations:
+    policies.kyverno.io/subject:  Pods
+    policies.kyverno.io/description: >-
+      Only spefic volumes are allowed
+spec:
+  background:              true
+  validationFailureAction: audit
+  failurePolicy:           Fail
+  rules: 
+  - name: volues-verify
+    match:
+      resources:
+        kinds: 
+        - Pod
+    exclude:
+      resources:
+        namespaces:
+        - kube-system
+    validate:
+      message: "Only volumes of emptyDir, secret, persistentVolumeClaim, projected, ephemeral, downwardAPI, csi are allowed"
+      deny:
+        conditions:
+          any:
+          - key: "{{ request.object.spec.volumes[].keys(@)[] || '' }}"
+            operator: AnyNotIn
+            value:
+            - name
+            - emptyDir
+            - secret
+            - persistentVolumeClaim
+            - projected
+            - ephemeral
+            - downwardAPI
+            - csi
