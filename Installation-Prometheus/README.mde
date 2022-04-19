@@ -1,0 +1,41 @@
+# Kyverno Installation
+
+* Installation von Kyverno damit vanilla Prometheus die Metriken scraped
+* Installation von [PolicyReporter](https://github.com/kyverno/policy-c) für wirklich sinnvolle Metriken
+
+
+## Installation von Kyverno damit vanilla Prometheus die Metriken scraped
+
+Anbei geht es schlicht um die Installation von Kyverno,
+so dass die KyvernoMetriken von vanilla Prometheus gesraped werden können. 
+
+
+Die Installation verläuft nach Doku. Lediglich das hier im Repo verwendete Helmchart sollte verwendet werden.
+
+
+~~~
+helm repo add kyverno https://kyverno.github.io/kyverno/
+helm repo update
+helm upgrade --install kyverno kyverno/kyverno -f kyverno-values.yaml --namespace kyverno --create-namespace
+~~~
+
+Die hier verfügbaren Metriken sind weniger interessant.
+
+Siehe https://kyverno.io/docs/monitoring/policy-rule-info-total/ für die interessantesten.
+
+
+* Installation von [PolicyReporter](https://github.com/kyverno/policy-c) für wirklich sinnvolle Metriken
+
+Der [PolicyReporter](https://github.com/kyverno/policy-reporter) bietet die Möglichkeit einzelne Policies zu monitoren 
+und ist daher sinnvoller weise einzurichten.
+
+Auch hier wird das HelmChart angepasst mit Vanilla Prometheus zu laufen. 
+Zudem wird extra die UI aktiviert. 
+Reports werden hier an Loki gesendet. Dies ist bei Gelegenheit anzupassen.
+
+~~~
+helm repo add policy-reporter https://kyverno.github.io/policy-reporter
+helm repo update
+helm upgrade --install policy-reporter policy-reporter/policy-reporter --create-namespace -n policy-reporter -f policy-reporter-values.yaml
+~~~
+
